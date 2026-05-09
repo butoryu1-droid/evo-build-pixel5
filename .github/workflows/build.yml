@@ -10,11 +10,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cleanup Space
+      - name: Cleanup Space (強力な削除)
         run: |
           sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/local/openjdk*
+          sudo rm -rf /usr/local/share/powershell
+          sudo rm -rf /usr/local/lib/node_modules
+          sudo apt-get clean
+          df -h # 消した後の空き容量をログに出力
 
       - name: Install Build Tools
         run: |
@@ -32,8 +38,11 @@ jobs:
           cd ~/evo
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
-          repo init -u https://github.com/Evolution-X/manifest -b bq2 --depth=1
-          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+          # --depth=1 に加え、不要なフォルダを同期しないようにオプションを追加
+          repo init -u https://github.com/Evolution-X/manifest -b bq2 --depth=1 --no-tags --no-clone-bundle
+          
+          # 同期するスレッド数を少し抑えて、安定して完了させる
+          repo sync -c -j4 --force-sync --no-clone-bundle --no-tags --current-branch
 
       - name: Sync Device Specific Trees
         run: |
